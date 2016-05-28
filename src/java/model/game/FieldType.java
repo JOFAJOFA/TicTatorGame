@@ -9,6 +9,6 @@ package model.game;
  *
  * @author Ferenc_S
  */
-enum FieldType {
+public enum FieldType {
     EMPTY, X, O
 }

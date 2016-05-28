@@ -5,7 +5,6 @@
  */
 package model.game;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,10 +20,6 @@ public class GameManager {
     public static GameManager getInstance() {
         if (instance == null) {
             instance = new GameManager();
-            instance.addGame(new Game("game1", "Game1User1", "Game1User2")); // uuh... totally generated from some post request...
-            instance.addGame(new Game("game2", "Game2User1", "Game2User2"));
-            instance.addGame(new Game("game3", "Game3User1", "Game3User2"));
-            instance.addGame(new Game("game4", "Game4User1", "Game4User2"));
         }
         return instance;
     }
@@ -34,14 +29,20 @@ public class GameManager {
         if (game != null) {
             return game;
         }
-        throw new GameException("The game doesn't exists!");
+        throw new GameException(String.format("The game (ID: %s) doesn't exists!", id));
     }
 
-    public void addGame(Game game) {
+    public void addGame(Game game) throws GameException {
+        if (games.containsKey(game.getId())) {
+            throw new GameException(String.format("The game (ID: %s) is already in progress!", game.getId()));
+        }
         games.put(game.getId(), game);
     }
 
-    public void removeGame(String gameId) {
+    public void removeGame(String gameId) throws GameException {
+        if (!games.containsKey(gameId)) {
+            throw new GameException(String.format("The game (ID: %s) is NOT in progress!", gameId));
+        }
         games.remove(gameId);
     }
 

@@ -6,15 +6,10 @@
 package model.game;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Arrays;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonWriter;
-import javax.websocket.Session;
 import static model.game.FieldType.*;
 import model.user.User;
 
@@ -24,35 +19,40 @@ import model.user.User;
  */
 public class Game {
 
-    String username1;
-    String username2;
+    String username_1;
+    String username_2;
     // The moment of game creation user Sessions don't yet exist
     User user1;
     User user2;
     String id;
 
     FieldType[] board = new FieldType[9];
+    FieldType winner = EMPTY; // coincidentally, FieldType is perfect for storing winnerType
     boolean xTurn = true;
+
+    public void setUser(User user) throws GameException {
+        if (username_1.equals(user.getUsername())) {
+            user1 = user;
+        } else if (username_2.equals(user.getUsername())) {
+            user2 = user;
+        } else {
+            throw new GameException(String.format("This user (%s) has nothing to do with this game(ID: %s, Players: %s, %s)!", user.getUsername(), id, username_1, username_2));
+        }
+    }
 
     public String getId() {
         return id;
     }
 
-    public Game(String id, String username1, String username2) {
-        this.id = id;
-        this.username1 = username1;
-        this.username2 = username2;
-        Arrays.fill(board, FieldType.EMPTY);
+    public FieldType getWinner() {
+        return winner;
     }
 
-    private void insertIntoBoard(int index) throws GameException {
-        if (board[index] == EMPTY) {
-            board[index] = xTurn ? X : O;
-            xTurn = !xTurn;
-        } else {
-            throw new GameException("This field is already marked!");
-        }
-
+    public Game(String id, String username1, String username2) {
+        this.id = id;
+        this.username_1 = username1;
+        this.username_2 = username2;
+        Arrays.fill(board, FieldType.EMPTY);
     }
 
     public void makeMove(int index) throws GameException, IOException {
@@ -60,16 +60,76 @@ public class Game {
             throw new GameException("Users are not set yet!");
         }
         insertIntoBoard(index);
-        if (true)// winner
-        {
-            sendNewBoard();
+        sendNewBoard();
+        winner = winner();
+        if (winner != EMPTY) {
+            sendWinner(winner);
         }
     }
 
-    public void sendNewBoard() throws IOException {
-        String board = boardToJson();
-        user1.sendText(board);
-        user2.sendText(board);
+    public JsonObject toJson() {
+        String user_win = winner == X ? username_1 : username_2;
+        String user_los = winner == O ? username_2 : username_1;
+        boolean draw = winner == EMPTY;
+        return Json.createObjectBuilder()
+                .add("gameId", id)
+                .add("winner", user_win)
+                .add("loser", user_los)
+                .add("isDraw", draw).build();
+    }
+
+    private void insertIntoBoard(int index) throws GameException {
+        if (board[index] == EMPTY) {
+            board[index] = xTurn ? X : O;
+            xTurn = !xTurn;
+        } else {
+            throw new GameException(String.format("This field at index %s is already marked!", index));
+        }
+    }
+
+    private FieldType winner() {
+
+        // all rows
+        for (int offset = 0; offset < 8; offset += 3) {
+            int x_sum = 0; // why int? the JVM models stacks using offsets that are multiples of 32 bits
+            int o_sum = 0;
+            for (int i = 0; i < 3; i++) {
+                if (board[i + offset] == EMPTY) {
+                    break;
+                } else if (board[i + offset] == X) {
+                    x_sum++;
+                } else if (board[i + offset] == O) {
+                    o_sum++;
+                }
+            }
+            if (x_sum == 3) {
+                return X;
+            }
+            if (o_sum == 3) {
+                return O;
+            }
+        }
+        // all cols
+        for (int offset = 0; offset < 3; offset++) {
+            int x_sum = 0; // 0 3 6    1 4 7   2 5 8
+            int o_sum = 0;
+            for (int i = 0; i < 8; i = +3) {
+                if (board[i + offset] == EMPTY) {
+                    break;
+                } else if (board[i + offset] == X) {
+                    x_sum++;
+                } else if (board[i + offset] == O) {
+                    o_sum++;
+                }
+            }
+            if (x_sum == 3) {
+                return X;
+            }
+            if (o_sum == 3) {
+                return O;
+            }
+        }
+        return EMPTY;
     }
 
     private String boardToJson() {
@@ -80,18 +140,18 @@ public class Game {
         return builder.build().toString();
     }
 
-    public void setUser(User user) throws GameException {
-        if (username1.equals(user.getUsername())) {
-            user1 = user;
-        }
-        else if (username2.equals(user.getUsername())) {
-            user2 = user;
-        } else {
-            throw new GameException(String.format("This user (%s) has nothing to do with this game(ID: %s, Players: %s, %s)!", user.getUsername(), id, username1, username2));
-        }
+    private void sendNewBoard() throws IOException {
+        String board = boardToJson();
+        user1.sendText(board);
+        user2.sendText(board);
     }
 
-    public boolean isFinished() {
-        return false;
+    private void sendWinner(FieldType type) throws IOException {
+        if (type == X) {
+            user1.sendText("You are winner!");
+            user2.sendText("You are lose!");
+        }
+        user1.sendText("You are lose!");
+        user2.sendText("You are winner!");
     }
 }
