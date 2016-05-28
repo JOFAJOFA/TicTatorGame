@@ -6,11 +6,42 @@ and open the template in the editor.
 -->
 <html>
     <head>
-        <title>TODO supply a title</title>
+        <title>VeryAwesome tictachoe</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript">
+            var websocket;
+            function startGame() {
+                websocket = new WebSocket("ws://localhost:34407/TicTatorGame/gameServerEndpoint/" + gameId.value + "/" + username.value);
+                websocket.onmessage = function processMessage(message) {
+                    console.log(message.data);
+                }
+            }
+            function sendMove(index) {
+                websocket.send(gameId.value + '&' + username.value + '&' + index);
+            }
+        </script>
     </head>
     <body>
-        <div>TODO write content</div>
+        <input type="text" id="gameId" size ="50"/>
+        <input type="text" id="username" size ="50"/>
+        <input type="button" value="startGame" onclick="startGame();"/>
+        <table border="1">
+            <tr>
+                <td id="0" height="100" width="100" onclick="sendMove(0)"></td>
+                <td id="1" height="100" width="100" onclick="sendMove(1)"></td>
+                <td id="2" height="100" width="100" onclick="sendMove(2)"></td>
+            </tr>
+            <tr>
+                <td id="3" height="100" width="100" onclick="sendMove(3)"></td>
+                <td id="4" height="100" width="100" onclick="sendMove(4)"></td>
+                <td id="5" height="100" width="100" onclick="sendMove(5)"></td>
+            </tr>
+            <tr>
+                <td id="6" height="100" width="100" onclick="sendMove(6)"></td>
+                <td id="7" height="100" width="100" onclick="sendMove(7)"></td>
+                <td id="8" height="100" width="100" onclick="sendMove(8)"></td>
+            </tr>
+        </table>
     </body>
 </html>
