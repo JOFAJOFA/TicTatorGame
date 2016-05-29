@@ -18,7 +18,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import model.game.Game;
 import model.game.GameException;
-import model.game.GameManager;
+import model.game.GameManagerImpl;
 
 /**
  *
@@ -39,7 +39,7 @@ public class AddGameServlet extends HttpServlet {
             String player1 = gameJson.getString("player1");
             String player2 = gameJson.getString("player2");
             Game game = new Game(gameId, player1, player2);
-            GameManager.getInstance().addGame(game);
+            GameManagerImpl.getInstance().addGame(game);
             logger.info(String.format("Game %s successfully created.", game.toJson()));
         } catch (GameException ex) {
             logger.log(Level.SEVERE, "Game creation failed due to game exception: ", ex);

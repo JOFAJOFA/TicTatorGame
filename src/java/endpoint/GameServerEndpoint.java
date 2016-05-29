@@ -5,15 +5,9 @@
  */
 package endpoint;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.net.ssl.HttpsURLConnection;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
@@ -23,8 +17,13 @@ import javax.websocket.server.ServerEndpoint;
 import model.game.Game;
 import model.game.GameException;
 import model.game.GameManager;
+import model.game.GameManagerImpl;
 import model.user.User;
 import static model.game.WinnerType.*;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  *
@@ -35,7 +34,7 @@ public class GameServerEndpoint {
 
     private static final Logger logger = Logger.getLogger(GameServerEndpoint.class.getName());
 
-    GameManager gm = GameManager.getInstance(); // Dependency injection would be nice.
+    GameManager gm = GameManagerImpl.getInstance(); // Dependency injection would be nice.
 
     @OnOpen
     public void handleOpen(@PathParam("username") String username, @PathParam("gameId") String gameId, Session session) {
@@ -45,7 +44,7 @@ public class GameServerEndpoint {
             gm.findGameById(gameId).setUser(new User(session, username));
             session.getBasicRemote().sendText("{\"board\":[]}");
         } catch (GameException ex) {
-            logger.log(Level.SEVERE, "Connection could not be opened due to game exception: ", ex);
+            logger.log(Level.INFO, "Connection could not be opened due to game exception: {0}", ex.getMessage());
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Connection could not be opened due to IO exception: ", ex);
         }
@@ -66,7 +65,7 @@ public class GameServerEndpoint {
                 sendGameResults(currentGame);
             }
         } catch (GameException ex) {
-            logger.log(Level.SEVERE, "Move could not be made due to game exception:", ex);
+            logger.log(Level.INFO, "Move could not be made due to game exception: {0}", ex.getMessage());
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Move could not be made due to IO", ex);
         }
@@ -79,45 +78,22 @@ public class GameServerEndpoint {
          */
     }
 
-    private void sendGameResults(Game currentGame) {
-     
+    private void sendGameResults(Game currentGame) throws IOException {
+        sendPost(currentGame.toJson().toString());
     }
-    private void sendPost() throws Exception {
-		String url = "https://selfsolve.apple.com/wcResults.do";
-		URL obj = new URL(url);
-		HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
 
-		//add reuqest header
-		con.setRequestMethod("POST");
-		con.setRequestProperty("User-Agent", "lel");
-		con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-
-		String urlParameters = "sn=C02G8416DRJM&cn=&locale=&caller=&num=12345";
-		
-		// Send post request
-		con.setDoOutput(true);
-		DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-		wr.writeBytes(urlParameters);
-		wr.flush();
-		wr.close();
-
-		int responseCode = con.getResponseCode();
-		System.out.println("\nSending 'POST' request to URL : " + url);
-		System.out.println("Post parameters : " + urlParameters);
-		System.out.println("Response Code : " + responseCode);
-
-		BufferedReader in = new BufferedReader(
-		        new InputStreamReader(con.getInputStream()));
-		String inputLine;
-		StringBuffer response = new StringBuffer();
-
-		while ((inputLine = in.readLine()) != null) {
-			response.append(inputLine);
-		}
-		in.close();
-		
-		//print result
-		System.out.println(response.toString());
-
-	}
+    private void sendPost(String json) throws IOException {
+        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        try {
+            HttpPost request = new HttpPost("http://localhost:34407/TicTatorGame/gameRecall");
+            StringEntity params = new StringEntity(json.toString());
+            request.addHeader("content-type", "application/json");
+            request.setEntity(params);
+            httpClient.execute(request);
+        } catch (Exception ex) {
+            // handle exception here
+        } finally {
+            httpClient.close();
+        }
+    }
 }
