@@ -9,12 +9,27 @@ and open the template in the editor.
         <title>VeryAwesome tictachoe</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="jquery-1.12.2.min.js"></script>
         <script type="text/javascript">
             var websocket;
             function startGame() {
                 websocket = new WebSocket("ws://localhost:34407/TicTatorGame/gameServerEndpoint/" + gameId.value + "/" + username.value);
                 websocket.onmessage = function processMessage(message) {
                     console.log(message.data);
+                    try {
+                        var data = JSON.parse(message.data)["board"];
+
+                        for (var i = 0; i < data.length; i++) {
+                            if (data[i] === "X") {
+                                document.getElementById("cell_" + i).style.backgroundColor = "red";
+                            } else if (data[i] === "O")
+                                document.getElementById("cell_" + i).style.backgroundColor = "blue";
+                            else
+                                console.log(data[i]);
+                        }
+                    } catch (e) {
+                        // freedom
+                    }
                 }
             }
             function sendMove(index) {
@@ -28,19 +43,19 @@ and open the template in the editor.
         <input type="button" value="startGame" onclick="startGame();"/>
         <table border="1">
             <tr>
-                <td id="0" height="100" width="100" onclick="sendMove(0)"></td>
-                <td id="1" height="100" width="100" onclick="sendMove(1)"></td>
-                <td id="2" height="100" width="100" onclick="sendMove(2)"></td>
+                <td id="cell_0" height="100" width="100" onclick="sendMove(0)"></td>
+                <td id="cell_1" height="100" width="100" onclick="sendMove(1)"></td>
+                <td id="cell_2" height="100" width="100" onclick="sendMove(2)"></td>
             </tr>
             <tr>
-                <td id="3" height="100" width="100" onclick="sendMove(3)"></td>
-                <td id="4" height="100" width="100" onclick="sendMove(4)"></td>
-                <td id="5" height="100" width="100" onclick="sendMove(5)"></td>
+                <td id="cell_3" height="100" width="100" onclick="sendMove(3)"></td>
+                <td id="cell_4" height="100" width="100" onclick="sendMove(4)"></td>
+                <td id="cell_5" height="100" width="100" onclick="sendMove(5)"></td>
             </tr>
             <tr>
-                <td id="6" height="100" width="100" onclick="sendMove(6)"></td>
-                <td id="7" height="100" width="100" onclick="sendMove(7)"></td>
-                <td id="8" height="100" width="100" onclick="sendMove(8)"></td>
+                <td id="cell_6" height="100" width="100" onclick="sendMove(6)"></td>
+                <td id="cell_7" height="100" width="100" onclick="sendMove(7)"></td>
+                <td id="cell_8" height="100" width="100" onclick="sendMove(8)"></td>
             </tr>
         </table>
     </body>

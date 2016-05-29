@@ -7,8 +7,12 @@ package servlet;
 
 import endpoint.GameServerEndpoint;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -24,16 +28,23 @@ import model.game.GameManager;
 public class AddGameServlet extends HttpServlet {
 
     private static final Logger logger = Logger.getLogger(AddGameServlet.class.getName());
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String gameId = request.getParameter("username");
-        String username_1 = request.getParameter("username_1");
-        String username_2 = request.getParameter("username_2");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         try {
-            GameManager.getInstance().addGame(new Game(gameId, username_1, username_2));
+            JsonReader jsonReader = Json.createReader(request.getInputStream());
+            JsonObject gameJson = jsonReader.readObject();
+            jsonReader.close();            
+            String gameId = gameJson.getString("gameId");
+            String player1 = gameJson.getString("player1");
+            String player2 = gameJson.getString("player2");
+            Game game = new Game(gameId, player1, player2);
+            GameManager.getInstance().addGame(game);
+            logger.info(String.format("Game %s successfully created.", game.toJson()));
         } catch (GameException ex) {
-            logger.log(Level.SEVERE, "Game creation failed due to exception: ", ex);
+            logger.log(Level.SEVERE, "Game creation failed due to game exception: ", ex);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Game creation failed due to IO exception:", ex);
         }
     }
-
 }

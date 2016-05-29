@@ -11,6 +11,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import static model.game.FieldType.*;
+import static model.game.WinnerType.*;
 import model.user.User;
 
 /**
@@ -27,8 +28,9 @@ public class Game {
     String id;
 
     FieldType[] board = new FieldType[9];
-    FieldType winner = EMPTY; // coincidentally, FieldType is perfect for storing winnerType
-    boolean xTurn = true;
+    WinnerType winner = ONGOING;
+    int movesMade = 0;
+    boolean user_1turn = true;
 
     public void setUser(User user) throws GameException {
         if (username_1.equals(user.getUsername())) {
@@ -44,7 +46,7 @@ public class Game {
         return id;
     }
 
-    public FieldType getWinner() {
+    public WinnerType getWinner() {
         return winner;
     }
 
@@ -55,81 +57,91 @@ public class Game {
         Arrays.fill(board, FieldType.EMPTY);
     }
 
-    public void makeMove(int index) throws GameException, IOException {
+    public void makeMove(String username, int index) throws GameException, IOException {
         if (user1 == null || user2 == null) {
             throw new GameException("Users are not set yet!");
         }
-        insertIntoBoard(index);
+
+        insertIntoBoard(username, index);
         sendNewBoard();
         winner = winner();
-        if (winner != EMPTY) {
+        if (winner != ONGOING) {
             sendWinner(winner);
         }
     }
 
     public JsonObject toJson() {
-        String user_win = winner == X ? username_1 : username_2;
-        String user_los = winner == O ? username_2 : username_1;
-        boolean draw = winner == EMPTY;
         return Json.createObjectBuilder()
                 .add("gameId", id)
-                .add("winner", user_win)
-                .add("loser", user_los)
-                .add("isDraw", draw).build();
+                .add("player1", username_1)
+                .add("player2", username_2)
+                .add("result", winner.getDescciption()).build();
     }
 
-    private void insertIntoBoard(int index) throws GameException {
-        if (board[index] == EMPTY) {
-            board[index] = xTurn ? X : O;
-            xTurn = !xTurn;
+    private void insertIntoBoard(String username, int index) throws GameException {
+        if (board[index] == EMPTY && thisUsersTurn(username)) {
+            board[index] = user_1turn ? X : O;
+            user_1turn = !user_1turn;
         } else {
             throw new GameException(String.format("This field at index %s is already marked!", index));
         }
     }
 
-    private FieldType winner() {
+    private WinnerType winner() {
 
         // all rows
         for (int offset = 0; offset < 8; offset += 3) {
             int x_sum = 0; // why int? the JVM models stacks using offsets that are multiples of 32 bits
             int o_sum = 0;
+            ROW:
             for (int i = 0; i < 3; i++) {
-                if (board[i + offset] == EMPTY) {
-                    break;
-                } else if (board[i + offset] == X) {
-                    x_sum++;
-                } else if (board[i + offset] == O) {
-                    o_sum++;
+                switch (board[i + offset]) {
+                    case EMPTY:
+                        break ROW;
+                    case X:
+                        x_sum++;
+                        break;
+                    case O:
+                        o_sum++;
+                        break;
+                    default:
+                        break;
                 }
             }
             if (x_sum == 3) {
-                return X;
+                return PLAYER_1;
             }
             if (o_sum == 3) {
-                return O;
+                return PLAYER_2;
             }
         }
         // all cols
         for (int offset = 0; offset < 3; offset++) {
-            int x_sum = 0; // 0 3 6    1 4 7   2 5 8
+            int x_sum = 0;
             int o_sum = 0;
-            for (int i = 0; i < 8; i = +3) {
-                if (board[i + offset] == EMPTY) {
-                    break;
-                } else if (board[i + offset] == X) {
-                    x_sum++;
-                } else if (board[i + offset] == O) {
-                    o_sum++;
+            COL:
+            for (int i = 0; i < 8; i += 3) {
+                switch (board[i + offset]) {
+                    case EMPTY:
+                        break COL;
+                    case X:
+                        x_sum++;
+                        break;
+                    case O:
+                        o_sum++;
+                        break;
+                    default:
+                        break;
                 }
             }
             if (x_sum == 3) {
-                return X;
+                return PLAYER_1;
             }
             if (o_sum == 3) {
-                return O;
+                return PLAYER_2;
             }
         }
-        return EMPTY;
+        return movesMade == 9 ? DRAW : ONGOING;
     }
 
     private String boardToJson() {
@@ -137,21 +149,35 @@ public class Game {
         for (FieldType t : board) {
             builder.add(t.name());
         }
-        return builder.build().toString();
+        return Json.createObjectBuilder().add("board", builder.build()).build().toString();
     }
 
     private void sendNewBoard() throws IOException {
         String board = boardToJson();
+        System.out.println(board);
         user1.sendText(board);
         user2.sendText(board);
     }
 
-    private void sendWinner(FieldType type) throws IOException {
-        if (type == X) {
-            user1.sendText("You are winner!");
-            user2.sendText("You are lose!");
+    private void sendWinner(WinnerType type) throws IOException {
+        switch (type) {
+            case PLAYER_1:
+                user1.sendText("You are winner!");
+                user2.sendText("You are lose!");
+                break;
+            case PLAYER_2:
+                user1.sendText("You are lose!");
+                user2.sendText("You are winner!");
+                break;
+            default:
+                user1.sendText("Draw.");
+                user2.sendText("Draw.");
         }
-        user1.sendText("You are lose!");
-        user2.sendText("You are winner!");
+    }
+
+    private boolean thisUsersTurn(String username) {
+        if(user_1turn && username.equals(username_1)) return true;
+        if(!user_1turn && username.equals(username_2)) return true;
+        return false;
     }
 }
