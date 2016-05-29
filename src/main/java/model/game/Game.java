@@ -88,7 +88,6 @@ public class Game {
     }
 
     private WinnerType winner() {
-
         // all rows
         for (int offset = 0; offset < 8; offset += 3) {
             int x_sum = 0; // why int? the JVM models stacks using offsets that are multiples of 32 bits
@@ -141,6 +140,42 @@ public class Game {
                 return PLAYER_2;
             }
         }
+
+        // diag 1
+        int x_sum = 0;
+        int o_sum = 0;
+        for (int i = 0; i < 3; i++) {
+            switch (board[i + i * 3]) {
+                case EMPTY:
+                    break;
+                case X:
+                    x_sum++;
+                    break;
+                case O:
+                    o_sum++;
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        // diag 2
+        x_sum = 0;
+        o_sum = 0;
+        for (int i = 0; i < 3; i++) {
+            switch (board[i * 2 + 2]) {
+                case EMPTY:
+                    break;
+                case X:
+                    x_sum++;
+                    break;
+                case O:
+                    o_sum++;
+                    break;
+                default:
+                    break;
+            }
+        }
         return movesMade == 9 ? DRAW : ONGOING;
     }
 
@@ -176,8 +211,12 @@ public class Game {
     }
 
     private boolean thisUsersTurn(String username) {
-        if(user_1turn && username.equals(username_1)) return true;
-        if(!user_1turn && username.equals(username_2)) return true;
+        if (user_1turn && username.equals(username_1)) {
+            return true;
+        }
+        if (!user_1turn && username.equals(username_2)) {
+            return true;
+        }
         return false;
     }
 }
