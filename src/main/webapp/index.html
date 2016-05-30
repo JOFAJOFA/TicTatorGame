@@ -13,7 +13,7 @@ and open the template in the editor.
         <script type="text/javascript">
             var websocket;
             function startGame() {
-                websocket = new WebSocket("ws://localhost:34407/TicTatorGame/gameServerEndpoint/" + gameId.value + "/" + username.value);
+                websocket = new WebSocket("ws://"+websocketIp.value+"/" + gameId.value + "/" + username.value);
                 websocket.onmessage = function processMessage(message) {
                     console.log(message.data);
                     try {
@@ -38,6 +38,7 @@ and open the template in the editor.
         </script>
     </head>
     <body>
+        <input type="text" id="websocketIp" size ="50" value="http://146.185.153.69:8080/TicTatorGame-1.0-SNAPSHOT/gameServerEndpoint"/>
         <input type="text" id="gameId" size ="50"/>
         <input type="text" id="username" size ="50"/>
         <input type="button" value="startGame" onclick="startGame();"/>

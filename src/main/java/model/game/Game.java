@@ -158,7 +158,13 @@ public class Game {
                     break;
             }
         }
-        
+        if (x_sum == 3) {
+            return PLAYER_1;
+        }
+        if (o_sum == 3) {
+            return PLAYER_2;
+        }
+
         // diag 2
         x_sum = 0;
         o_sum = 0;
@@ -176,6 +182,13 @@ public class Game {
                     break;
             }
         }
+        if (x_sum == 3) {
+            return PLAYER_1;
+        }
+        if (o_sum == 3) {
+            return PLAYER_2;
+        }
+        
         return movesMade == 9 ? DRAW : ONGOING;
     }
 
