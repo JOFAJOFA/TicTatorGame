@@ -20,10 +20,14 @@ import model.game.GameManager;
 import model.game.GameManagerImpl;
 import model.user.User;
 import static model.game.WinnerType.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import static property.Constants.GAME_CALLBACK;
+import static property.Constants.MM_SERVER_IP;
+import property.PropertyHandler;
 
 /**
  *
@@ -85,13 +89,15 @@ public class GameServerEndpoint {
     private void sendPost(String json) throws IOException {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         try {
-            HttpPost request = new HttpPost("http://localhost:34407/TicTatorGame/gameRecall");
+            String remoteAddr = PropertyHandler.getInstance().getValue(MM_SERVER_IP) + GAME_CALLBACK;
+            HttpPost request = new HttpPost(remoteAddr);
             StringEntity params = new StringEntity(json.toString());
             request.addHeader("content-type", "application/json");
             request.setEntity(params);
-            httpClient.execute(request);
-        } catch (Exception ex) {
-            // handle exception here
+            CloseableHttpResponse response = httpClient.execute(request);
+            if (response.getStatusLine().getStatusCode() != 200) {
+                logger.warning(String.format("The request was not handled correctly by remote server at %s. Error: %s", remoteAddr, response.getStatusLine().getStatusCode()));
+            }
         } finally {
             httpClient.close();
         }

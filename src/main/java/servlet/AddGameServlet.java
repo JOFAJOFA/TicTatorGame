@@ -5,7 +5,6 @@
  */
 package servlet;
 
-import endpoint.GameServerEndpoint;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Collections;
@@ -15,12 +14,19 @@ import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.rmi.CORBA.Util;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import model.game.Game;
 import model.game.GameException;
 import model.game.GameManagerImpl;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import static property.Constants.MM_SERVER_IP;
+import static property.Constants.SET_IP;
+import property.PropertyHandler;
 
 /**
  *
@@ -42,7 +48,7 @@ public class AddGameServlet extends HttpServlet {
             String player2 = gameJson.getString("player2");
             Game game = new Game(gameId, player1, player2);
             GameManagerImpl.getInstance().addGame(game);
-            callbackToMatchMaking(request);
+            setIpToMatchMaking(gameId);
             logger.info(String.format("Game %s successfully created.", game.toJson()));
         } catch (GameException ex) {
             logger.log(Level.SEVERE, "Game creation failed due to game exception: ", ex);
@@ -51,10 +57,22 @@ public class AddGameServlet extends HttpServlet {
         }
     }
 
-    private void callbackToMatchMaking(HttpServletRequest request) {
-        List<String> list = Collections.list(request.getHeaderNames());
-        for (String s : list) {
-            logger.log(Level.INFO, "Header" + s + " is " + request.getHeader(s));
+    /*
+    Notifies the MM service about what server ended up taking care of the game so that
+    MM can tell the user which IP to connect to
+     */
+    private void setIpToMatchMaking(String gameId) {
+        try {
+            // Make it a post request
+            CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+            String remoteAddr = PropertyHandler.getInstance().getValue(MM_SERVER_IP);
+            HttpPost request = new HttpPost(remoteAddr + SET_IP + gameId);
+            logger.info(String.format("Ip is sent to %s for gameId %s.", remoteAddr, gameId));
+            httpClient.execute(request);
+            httpClient.close();
+        } catch (IOException ex) {
+            Logger.getLogger(AddGameServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+
     }
 }
