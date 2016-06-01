@@ -44,7 +44,6 @@ public class GameServerEndpoint {
     public void handleOpen(@PathParam("username") String username, @PathParam("gameId") String gameId, Session session) {
         try {
             // By this point, game should have been created
-            System.out.println("Session opened");
             gm.findGameById(gameId).setUser(new User(session, username));
             session.getBasicRemote().sendText("{\"board\":[]}");
         } catch (GameException ex) {

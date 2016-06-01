@@ -6,15 +6,11 @@
 package servlet;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import javax.rmi.CORBA.Util;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
