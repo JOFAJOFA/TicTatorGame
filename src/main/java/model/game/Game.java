@@ -63,6 +63,7 @@ public class Game {
         }
 
         insertIntoBoard(username, index);
+        movesMade++;
         sendNewBoard();
         winner = winner();
         if (winner != ONGOING) {
@@ -188,7 +189,6 @@ public class Game {
         if (o_sum == 3) {
             return PLAYER_2;
         }
-        
         return movesMade == 9 ? DRAW : ONGOING;
     }
 
@@ -202,7 +202,6 @@ public class Game {
 
     private void sendNewBoard() throws IOException {
         String board = boardToJson();
-        System.out.println(board);
         user1.sendText(board);
         user2.sendText(board);
     }

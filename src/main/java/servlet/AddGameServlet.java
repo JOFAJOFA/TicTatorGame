@@ -51,8 +51,10 @@ public class AddGameServlet extends HttpServlet {
             setIpToMatchMaking(gameId);
             logger.info(String.format("Game %s successfully created.", game.toJson()));
         } catch (GameException ex) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             logger.log(Level.SEVERE, "Game creation failed due to game exception: ", ex);
         } catch (IOException ex) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             logger.log(Level.SEVERE, "Game creation failed due to IO exception:", ex);
         }
     }
