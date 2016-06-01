@@ -13,6 +13,7 @@ public class Constants {
  public static final String MM_SERVER_IP = "matchmaking.ip";
  public static final String SET_IP = "/setIp/";
  public static final String GAME_CALLBACK = "/gameResult";
+ public static final int GAME_EXPIRES = 120000;
 
  
 }

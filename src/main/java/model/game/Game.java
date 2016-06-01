@@ -13,6 +13,8 @@ import javax.json.JsonObject;
 import static model.game.FieldType.*;
 import static model.game.WinnerType.*;
 import model.user.User;
+import property.Constants;
+import property.PropertyHandler;
 
 /**
  *
@@ -31,6 +33,7 @@ public class Game {
     WinnerType winner = ONGOING;
     int movesMade = 0;
     boolean user_1turn = true;
+    long expiresAt = 0;
 
     public void setUser(User user) throws GameException {
         if (username_1.equals(user.getUsername())) {
@@ -50,11 +53,16 @@ public class Game {
         return winner;
     }
 
+    public boolean isExpired() {
+        return System.currentTimeMillis() > expiresAt;
+    }
+
     public Game(String id, String username1, String username2) {
         this.id = id;
         this.username_1 = username1;
         this.username_2 = username2;
         Arrays.fill(board, FieldType.EMPTY);
+        expiresAt = System.currentTimeMillis() + Constants.GAME_EXPIRES;
     }
 
     public void makeMove(String username, int index) throws GameException, IOException {
