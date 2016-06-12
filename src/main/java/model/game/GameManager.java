@@ -5,6 +5,8 @@
  */
 package model.game;
 
+import java.util.Collection;
+
 /**
  *
  * @author Ferenc_S
@@ -14,6 +16,8 @@ public interface GameManager {
     void addGame(Game game) throws GameException;
 
     Game findGameById(String id) throws GameException;
+    
+    public Collection<Game> getAllGames();
 
     void removeGame(String gameId) throws GameException;
     

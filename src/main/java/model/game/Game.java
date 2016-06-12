@@ -7,6 +7,7 @@ package model.game;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -33,6 +34,7 @@ public class Game {
     WinnerType winner = ONGOING;
     int movesMade = 0;
     boolean user_1turn = true;
+    final long createdAt;
     long expiresAt = 0;
 
     public void setUser(User user) throws GameException {
@@ -45,8 +47,20 @@ public class Game {
         }
     }
 
+    public String getUsername_1() {
+        return username_1;
+    }
+
+    public String getUsername_2() {
+        return username_2;
+    }
+
     public String getId() {
         return id;
+    }
+    
+    public String getCreatedAt(){
+        return new Date(createdAt).toString();
     }
 
     public WinnerType getWinner() {
@@ -62,6 +76,7 @@ public class Game {
         this.username_1 = username1;
         this.username_2 = username2;
         Arrays.fill(board, FieldType.EMPTY);
+        createdAt = System.currentTimeMillis();
         expiresAt = System.currentTimeMillis() + Constants.GAME_EXPIRES;
     }
 

@@ -5,6 +5,7 @@
  */
 package model.game;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -40,6 +41,11 @@ public class GameManagerImpl implements GameManager {
             return game;
         }
         throw new GameException(String.format("The game (ID: %s) doesn't exists!", id));
+    }
+
+    @Override
+    public Collection<Game> getAllGames() {
+        return games.values();
     }
 
     @Override
