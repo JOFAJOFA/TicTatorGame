@@ -86,6 +86,7 @@ public class Game {
         }
 
         insertIntoBoard(username, index);
+        expiresAt = System.currentTimeMillis() + Constants.GAME_EXPIRES; // if a game is untouched for 2 minutes, it will be removed when a new game is created
         movesMade++;
         sendNewBoard();
         winner = winner();

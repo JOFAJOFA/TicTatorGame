@@ -54,8 +54,10 @@ public class GameManagerImpl implements GameManager {
             throw new GameException(String.format("The game (ID: %s) is already in progress!", game.getId()));
         }
         games.put(game.getId(), game);
-        if (System.currentTimeMillis() - lastUpdate > Constants.GAME_EXPIRES) {
+        // no more often than every two minutes we check for old games
+        if (System.currentTimeMillis() - lastUpdate > Constants.OLD_GAME_INTERVAL) {
             oldGameCollector();
+            lastUpdate = System.currentTimeMillis();
         }
     }
 

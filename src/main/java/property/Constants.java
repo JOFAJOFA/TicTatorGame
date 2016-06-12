@@ -14,6 +14,7 @@ public class Constants {
  public static final String SET_IP = "/setIp/";
  public static final String GAME_CALLBACK = "/gameResult";
  public static final int GAME_EXPIRES = 120000;
+ public static final int OLD_GAME_INTERVAL = 120000;
 
  
 }
